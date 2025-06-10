@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:push_example/base_state.dart';
 
 class IOSPage extends StatefulWidget {
-  const IOSPage({super.key});
+  const IOSPage({Key? key}) : super(key: key);
+
 
   @override
   State<StatefulWidget> createState() => _IOSPageState();

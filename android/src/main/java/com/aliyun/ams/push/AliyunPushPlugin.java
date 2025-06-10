@@ -26,10 +26,13 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationManagerCompat;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -38,7 +41,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 /**
  * PushPlugin
  */
-public class AliyunPushPlugin implements FlutterPlugin, MethodCallHandler {
+public class AliyunPushPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
 
 	private static final String TAG = "MPS:PushPlugin";
 
@@ -52,7 +55,7 @@ public class AliyunPushPlugin implements FlutterPlugin, MethodCallHandler {
 
 	private MethodChannel channel;
 	private Context mContext;
-
+	private FlutterPluginBinding flutterPluginBinding;
 	public static AliyunPushPlugin sInstance;
 
 	public AliyunPushPlugin() {
@@ -63,16 +66,12 @@ public class AliyunPushPlugin implements FlutterPlugin, MethodCallHandler {
 		if (TextUtils.isEmpty(method)) {
 			return;
 		}
-
-		Handler handler = new Handler(Looper.getMainLooper());
-		handler.post(() -> channel.invokeMethod(method, arguments));
+		AliyunPushHandler.instance.callFlutterMethod(method, arguments);
 	}
 
 	@Override
 	public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-		channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "aliyun_push");
-		channel.setMethodCallHandler(this);
-		mContext = flutterPluginBinding.getApplicationContext();
+		this.flutterPluginBinding = flutterPluginBinding;
 	}
 
 	@Override
@@ -139,7 +138,7 @@ public class AliyunPushPlugin implements FlutterPlugin, MethodCallHandler {
 
 	@Override
 	public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-		channel.setMethodCallHandler(null);
+		this.flutterPluginBinding = null;
 	}
 
 	private void initPush(Result result) {
@@ -852,4 +851,26 @@ public class AliyunPushPlugin implements FlutterPlugin, MethodCallHandler {
 		mContext.startActivity(intent);
 	}
 
+	@Override
+	public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+		channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "aliyun_push");
+		channel.setMethodCallHandler(this);
+		mContext = flutterPluginBinding.getApplicationContext();
+		AliyunPushHandler.instance.init(flutterPluginBinding.getBinaryMessenger());
+	}
+
+	@Override
+	public void onDetachedFromActivityForConfigChanges() {
+		onDetachedFromActivity();
+	}
+
+	@Override
+	public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+		onAttachedToActivity(binding);
+	}
+
+	@Override
+	public void onDetachedFromActivity() {
+		channel.setMethodCallHandler(null);
+	}
 }

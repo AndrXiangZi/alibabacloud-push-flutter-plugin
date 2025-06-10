@@ -4,7 +4,8 @@ import 'package:aliyun_push/aliyun_push.dart';
 import 'package:push_example/base_state.dart';
 
 class AndroidPage extends StatefulWidget {
-  const AndroidPage({super.key});
+  const AndroidPage({Key? key}) : super(key: key);
+
 
   @override
   State<StatefulWidget> createState() => _AndroidPageState();
@@ -223,9 +224,7 @@ class _AndroidPageState extends BaseState<AndroidPage> {
               _selectedLogLevel = value as String;
             });
           },
-          buttonHeight: 40,
-          buttonWidth: 140,
-          itemHeight: 40,
+
         ),
       ),
     ));

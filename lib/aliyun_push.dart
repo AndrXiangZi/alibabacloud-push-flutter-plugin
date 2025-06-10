@@ -347,7 +347,7 @@ class AliyunPush {
       };
     }
     Map<dynamic, dynamic> createResult = await methodChannel.invokeMethod(
-        'createChannelGroup', {'id': id, 'name': name, 'desc': desc});
+        'createGroup', {'id': id, 'name': name, 'desc': desc});
     return createResult;
   }
 

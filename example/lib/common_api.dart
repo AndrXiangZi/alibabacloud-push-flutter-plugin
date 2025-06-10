@@ -3,7 +3,8 @@ import 'package:aliyun_push/aliyun_push.dart';
 import 'package:push_example/base_state.dart';
 
 class CommonApiPage extends StatefulWidget {
-  const CommonApiPage({super.key});
+  const CommonApiPage({Key? key}) : super(key: key);
+
 
   @override
   State<StatefulWidget> createState() => _CommonApiPageState();

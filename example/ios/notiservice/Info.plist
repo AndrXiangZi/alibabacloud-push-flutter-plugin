@@ -26,7 +26,7 @@
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.usernotifications.service</string>
+		<string>com.anmed.app.service</string>
 		<key>NSExtensionPrincipalClass</key>
 		<string>NotificationService</string>
 	</dict>
