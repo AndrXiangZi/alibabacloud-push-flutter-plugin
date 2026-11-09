@@ -1,0 +1,21 @@
+# Pigeon 代码生成配置
+# 此文件用于配置 Pigeon 生成的代码路径和选项
+
+targets:
+  $default:
+    builders:
+      pigeon:
+        enabled: true
+        options:
+          # Dart 输出配置
+          dart:
+            out: lib/pigeon/messages.dart
+          
+          # Kotlin 输出配置（Android）
+          kotlin:
+            out: android/src/main/kotlin/com/aliyun/ams/push/Pigeon.kt
+            package: com.aliyun.ams.push
+
+          # Swift 输出配置（iOS）
+          swift:
+            out: ios/Classes/Pigeon.swift

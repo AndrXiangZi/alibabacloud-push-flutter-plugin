@@ -51,11 +51,6 @@ class _HomePageState extends BaseState<HomePage> {
     showOkDialog('onNotification: $message');
   }
 
-  Future<void> _onAndroidNotificationReceivedInApp(
-      Map<dynamic, dynamic> message) async {
-    showOkDialog('onAndroidNotificationReceivedInApp: $message');
-  }
-
   Future<void> _onMessage(Map<dynamic, dynamic> message) async {
     showOkDialog('onMessage: $message');
   }
@@ -66,11 +61,6 @@ class _HomePageState extends BaseState<HomePage> {
 
   Future<void> _onNotificationRemoved(Map<dynamic, dynamic> message) async {
     showOkDialog('onNotificationRemoved: $message');
-  }
-
-  Future<void> _onAndroidNotificationClickedWithNoAction(
-      Map<dynamic, dynamic> message) async {
-    showOkDialog('onAndroidNotificationClickedWithNoAction: $message');
   }
 
   Future<void> _onIOSChannelOpened(Map<dynamic, dynamic> message) async {}
@@ -91,9 +81,6 @@ class _HomePageState extends BaseState<HomePage> {
         onNotificationOpened: _onNotificationOpened,
         onNotificationRemoved: _onNotificationRemoved,
         onMessage: _onMessage,
-        onAndroidNotificationReceivedInApp: _onAndroidNotificationReceivedInApp,
-        onAndroidNotificationClickedWithNoAction:
-            _onAndroidNotificationClickedWithNoAction,
         onIOSChannelOpened: _onIOSChannelOpened,
         onIOSRegisterDeviceTokenSuccess: _onIOSRegisterDeviceTokenSuccess,
         onIOSRegisterDeviceTokenFailed: _onIOSRegisterDeviceTokenFailed);
@@ -177,6 +164,7 @@ class _HomePageState extends BaseState<HomePage> {
               ElevatedButton(
                   onPressed: () {
                     _aliyunPush.getDeviceId().then((deviceId) {
+                      debugPrint("_deviceId:${_deviceId}");
                       setState(() {
                         _deviceId = deviceId;
                       });

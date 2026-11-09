@@ -35,5 +35,6 @@ example/android/.gradle/
 example/build/
 .idea/
 .vscode/
-.fvm
 
+# FVM Version Cache
+.fvm/

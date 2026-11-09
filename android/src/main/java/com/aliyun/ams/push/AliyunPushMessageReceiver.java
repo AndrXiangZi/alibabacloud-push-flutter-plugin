@@ -16,6 +16,12 @@ import androidx.core.app.NotificationCompat;
 /**
  * @author wangyun
  * @date 2023/1/12
+ * 
+ * Updated for SDK 4.x and Pigeon:
+ * - onNotificationOpened parameter changed to Map<String, String>
+ * - Removed onNotificationClickedWithNoAction (merged into onNotificationOpened)
+ * - Removed onNotificationReceivedInApp (merged into onNotification)
+ * - Use Pigeon PushEventCallbackHandler for type-safe Flutter callbacks
  */
 
 public class AliyunPushMessageReceiver extends MessageReceiver {
@@ -53,7 +59,8 @@ public class AliyunPushMessageReceiver extends MessageReceiver {
 	}
 
 	/**
-	 * 推送通知的回调方法
+	 * 阿里云自有通道通知到达回调
+	 * SDK 4.x: 统一通知到达回调
 	 *
 	 * @param context
 	 * @param title
@@ -63,107 +70,63 @@ public class AliyunPushMessageReceiver extends MessageReceiver {
 	@Override
 	public void onNotification(Context context, String title, String summary,
 							   Map<String, String> extraMap) {
-		Map<String, Object> arguments = new HashMap<>();
-		if (null != extraMap) {
-			arguments.putAll(extraMap);
-		} else {
-		}
+		AliyunPushLog.d(REC_TAG, "onNotification: title=" + title + ", summary=" + summary);
 
-		AliyunPushPlugin.sInstance.callFlutterMethod("onNotification", arguments);
+		// 使用 Pigeon 事件回调
+		PushEventCallbackHandler.INSTANCE.onNotification(title, summary, extraMap);
 	}
 
 	/**
-	 * 应用处于前台时通知到达回调。注意:该方法仅对自定义样式通知有效,相关详情请参考https://help.aliyun.com/document_detail/30066
-	 * .html?spm=5176.product30047.6.620.wjcC87#h3-3-4-basiccustompushnotification-api
-	 *
-	 * @param context
-	 * @param title
-	 * @param summary
-	 * @param extraMap
-	 * @param openType
-	 * @param openActivity
-	 * @param openUrl
-	 */
-	@Override
-	protected void onNotificationReceivedInApp(Context context, String title, String summary,
-											   Map<String, String> extraMap, int openType,
-											   String openActivity, String openUrl) {
-		Map<String, Object> arguments = new HashMap<>();
-		if (extraMap != null && !extraMap.isEmpty()) {
-			arguments.putAll(extraMap);
-		}
-		arguments.put("title", title);
-		arguments.put("summary", summary);
-		arguments.put("openType", openType);
-		arguments.put("openActivity", openActivity);
-		arguments.put("openUrl", openUrl);
-		AliyunPushPlugin.sInstance.callFlutterMethod("onNotificationReceivedInApp", arguments);
-	}
-
-	/**
-	 * 推送消息的回调方法
+	 * 阿里云自有通道消息到达回调
 	 *
 	 * @param context
 	 * @param cPushMessage
 	 */
 	@Override
 	public void onMessage(Context context, CPushMessage cPushMessage) {
-		Map<String, Object> arguments = new HashMap<>();
-		arguments.put("title", cPushMessage.getTitle());
-		arguments.put("content", cPushMessage.getContent());
-		arguments.put("msgId", cPushMessage.getMessageId());
-		arguments.put("appId", cPushMessage.getAppId());
-		arguments.put("traceInfo", cPushMessage.getTraceInfo());
-		AliyunPushPlugin.sInstance.callFlutterMethod("onMessage", arguments);
+		AliyunPushLog.d(REC_TAG, "onMessage: title=" + cPushMessage.getTitle());
+
+		// 使用 Pigeon 事件回调
+		PushEventCallbackHandler.INSTANCE.onMessage(
+			cPushMessage.getTitle(),
+			cPushMessage.getContent(),
+			cPushMessage.getMessageId(),
+			cPushMessage.getAppId(),
+			cPushMessage.getTraceInfo()
+		);
 	}
 
 	/**
-	 * 从通知栏打开通知的扩展处理
+	 * 阿里云自有通道和厂商通道通知点击回调
+	 * SDK 4.x: 统一处理所有通道的通知点击，包括厂商通道
+	 * 
+	 * 注意：SDK 4.x 已将 onNotificationClickedWithNoAction 合并到此方法
 	 *
 	 * @param context
 	 * @param title
 	 * @param summary
-	 * @param extraMap
+	 * @param extraMap 新版参数类型为 Map<String, String>
 	 */
 	@Override
 	public void onNotificationOpened(Context context, String title, String summary,
-									 String extraMap) {
-		Map<String, Object> arguments = new HashMap<>();
-		arguments.put("title", title);
-		arguments.put("summary", summary);
-		arguments.put("extraMap", extraMap);
-		AliyunPushPlugin.sInstance.callFlutterMethod("onNotificationOpened", arguments);
+									 Map<String, String> extraMap) {
+		AliyunPushLog.d(REC_TAG, "onNotificationOpened: title=" + title + ", summary=" + summary);
+
+		// 使用 Pigeon 事件回调
+		PushEventCallbackHandler.INSTANCE.onNotificationOpened(title, summary, extraMap);
 	}
 
 	/**
-	 * 通知删除回调
+	 * 阿里云自有通道通知清除回调
 	 *
 	 * @param context
 	 * @param messageId
 	 */
 	@Override
 	public void onNotificationRemoved(Context context, String messageId) {
-		Map<String, Object> arguments = new HashMap<>();
-		arguments.put("msgId", messageId);
-		AliyunPushPlugin.sInstance.callFlutterMethod("onNotificationRemoved", arguments);
-	}
+		AliyunPushLog.d(REC_TAG, "onNotificationRemoved: messageId=" + messageId);
 
-	/**
-	 * 无动作通知点击回调。当在后台或阿里云控制台指定的通知动作为无逻辑跳转时,
-	 * 通知点击回调为onNotificationClickedWithNoAction而不是onNotificationOpened
-	 *
-	 * @param context
-	 * @param title
-	 * @param summary
-	 * @param extraMap
-	 */
-	@Override
-	protected void onNotificationClickedWithNoAction(Context context, String title, String summary
-		, String extraMap) {
-		Map<String, Object> arguments = new HashMap<>();
-		arguments.put("title", title);
-		arguments.put("summary", summary);
-		arguments.put("extraMap", extraMap);
-		AliyunPushPlugin.sInstance.callFlutterMethod("onNotificationClickedWithNoAction", arguments);
+		// 使用 Pigeon 事件回调
+		PushEventCallbackHandler.INSTANCE.onNotificationRemoved(messageId);
 	}
 }

@@ -516,17 +516,17 @@ _pushPlugin.listAlias(account).then((result) {
 
 ### `bindTag`
 
-`Future<Map<dynamic, dynamic>> bindTag(List<String> tags,{int target = kAliyunTargetDevice, String? alias}) async`
+`Future<Map<dynamic, dynamic>> bindTag(List<String> tags) async`
 
 添加标签
-  
+
+**SDK 4.x 变更说明：只支持设备标签，不再支持账号标签和别名标签**
+
 参数:
 
 | 参数名 | 类型 | 是否必须 | 含义 |
 | --- | --- | ---| --- |
-| tags | List\<String> | 必须参数 |  要绑定的标签列表 |
-| target | int | 可选参数 |  目标类型，1: 本设备  2: 本设备绑定账号  3: 别名</br>默认是1 |
-| alias | String| 可选参数 | 别名（仅当target = 3时生效）
+| tags | List<String> | 必须参数 |  要绑定的标签列表 |
 
 返回值：
 
@@ -550,17 +550,17 @@ _pushPlugin.bindTag(tags).then((result) {
 
 ### `unbindTag`
 
-`Future<Map<dynamic, dynamic>> unbindTag(List<String> tags, {int target = kAliyunTargetDevice, String? alias}) async`
+`Future<Map<dynamic, dynamic>> unbindTag(List<String> tags) async`
 
 移除标签
+
+**SDK 4.x 变更说明：只支持设备标签，不再支持账号标签和别名标签**
 
 参数:
 
 | 参数名 | 类型 | 是否必须 | 含义 |
 | --- | --- | ---| --- |
-| tags | List\<String\> | 必须参数 |  要移除的标签列表 |
-| target | int | 可选参数 |  目标类型，1: 本设备  2: 本设备绑定账号  3: 别名</br>默认是1 |
-| alias | String| 可选参数 | 别名（仅当target = 3时生效）
+| tags | List<String> | 必须参数 |  要移除的标签列表 |
 
 返回值：
 
@@ -584,9 +584,11 @@ _pushPlugin.unbindTag(tags).then((result) {
 
 ### `listTags`
 
-`Future<Map<dynamic, dynamic>> listTags`
+`Future<Map<dynamic, dynamic>> listTags() async`
 
-查询标签列表
+查询设备标签列表
+
+**SDK 4.x 变更说明：只支持设备标签，不再支持账号标签和别名标签**
 
 返回值：
 
@@ -601,10 +603,10 @@ map中包含三个key值:
 代码示例：
 
 ```dart
- _pushPlugin.listTags(account).then((result) {
+ _pushPlugin.listTags().then((result) {
     var code = result['code'];
     if (code == kAliyunPushSuccessCode) {      
-        var tagsList = listTagsResult['tagsList'];      
+        var tagsList = result['tagsList'];      
     } else {
     }
 });
