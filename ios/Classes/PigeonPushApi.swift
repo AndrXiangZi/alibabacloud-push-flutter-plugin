@@ -7,11 +7,11 @@ class PigeonPushApi: PushApi {
 
     // MARK: - Properties
 
-    private weak var plugin: AliyunPushPlugin?
+    private weak var plugin: SwiftAliyunPushPlugin?
 
     // MARK: - Initialization
 
-    init(plugin: AliyunPushPlugin) {
+    init(plugin: SwiftAliyunPushPlugin) {
         self.plugin = plugin
     }
 

@@ -4,8 +4,7 @@ import CloudPushSDK
 import UserNotifications
 
 /// 阿里云推送 Flutter 插件 - Swift 实现
-@objc(AliyunPushPlugin)
-class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegate {
+public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegate {
 
     // MARK: - Properties
 
@@ -19,10 +18,10 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
 
     // MARK: - FlutterPlugin
 
-    static func register(with registrar: FlutterPluginRegistrar) {
+    public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "aliyun_push", binaryMessenger: registrar.messenger())
 
-        let instance = AliyunPushPlugin()
+        let instance = SwiftAliyunPushPlugin()
         instance.channel = channel
         instance.pigeonApi = PigeonPushApi(plugin: instance)
 
@@ -35,14 +34,14 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
 
     // MARK: - Method Call Handler (保留用于事件回调)
 
-    func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         // Pigeon 已处理所有方法，这里只处理事件回调
         result(FlutterMethodNotImplemented)
     }
 
     // MARK: - AppDelegate Methods
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+   public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         if let notification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
             remoteNotification = notification
         }
@@ -51,7 +50,7 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
 
     // MARK: - APNs Registration
 
-    func registerAPNS() {
+     func registerAPNS() {
         // 现代 iOS (iOS 10+) 使用 UserNotifications framework
         notificationCenter = UNUserNotificationCenter.current()
         notificationCenter?.delegate = self
@@ -65,7 +64,7 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
         }
     }
 
-    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    public func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         self.deviceToken = deviceToken
 
         CloudPushSDK.registerDevice(deviceToken) { result in
@@ -78,13 +77,13 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
         }
     }
 
-    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    public func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         sendEvent("onRegisterDeviceTokenFailed", ["error": error.localizedDescription])
     }
 
     // MARK: - Remote Notification Handling
 
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
 
         CloudPushSDK.sendNotificationAck(userInfo)
         sendEvent("onNotification", userInfo as? [String: Any] ?? [:])
@@ -105,7 +104,7 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
 
     // MARK: - UNUserNotificationCenterDelegate
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
 
         if showNoticeWhenForeground {
             completionHandler([.sound, .alert, .badge])
@@ -115,7 +114,7 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
         }
     }
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
 
         let userInfo = response.notification.request.content.userInfo
         let userAction = response.actionIdentifier
@@ -165,7 +164,7 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
 
     // MARK: - Channel Opened Listener
 
-    func listenChannelOpened() {
+   public func listenChannelOpened() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onChannelOpened),
@@ -180,7 +179,7 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
 
     // MARK: - Message Receiver
 
-    func registerMessageReceive() {
+   public func registerMessageReceive() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onMessageReceived),
