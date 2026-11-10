@@ -2,7 +2,6 @@ package com.aliyun.ams.push;
 
 import com.alibaba.sdk.android.push.HonorRegister;
 import com.alibaba.sdk.android.push.huawei.HuaWeiRegister;
-import com.alibaba.sdk.android.push.register.GcmRegister;
 import com.alibaba.sdk.android.push.register.MeizuRegister;
 import com.alibaba.sdk.android.push.register.MiPushRegister;
 import com.alibaba.sdk.android.push.register.OppoRegister;
@@ -40,33 +39,6 @@ public class AliyunThirdPushUtils {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	public static void registerGCM(Application application) {
-		String sendId = getGCMSendId(application);
-		String applicationId = getGCMApplicationId(application);
-		String projectId = getGCMProjectId(application);
-		String apiKey = getGCMApiKey(application);
-
-		if (sendId != null && applicationId != null && projectId != null && apiKey != null) {
-			GcmRegister.register(application, sendId, applicationId, projectId, apiKey);
-		}
-	}
-
-	private static String getGCMSendId(Context context) {
-		return getAppMetaDataWithId(context, "com.gcm.push.sendid");
-	}
-
-	private static String getGCMApplicationId(Context context) {
-		return getAppMetaDataWithId(context, "com.gcm.push.applicationid");
-	}
-
-	private static String getGCMProjectId(Context context) {
-		return getAppMetaDataWithId(context, "com.gcm.push.projectid");
-	}
-
-	private static String getGCMApiKey(Context context) {
-		return getAppMetaDataWithId(context, "com.gcm.push.api.key");
 	}
 
 	public static void registerMeizuPush(Application application) {

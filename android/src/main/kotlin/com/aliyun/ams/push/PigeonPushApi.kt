@@ -244,14 +244,19 @@ class PigeonPushApi(private val context: Context) : PushApi {
         val appContext = context.applicationContext
 
         if (appContext is android.app.Application) {
-            val application = appContext
-            AliyunThirdPushUtils.registerHuaweiPush(application)
-            AliyunThirdPushUtils.registerXiaoMiPush(application)
-            AliyunThirdPushUtils.registerVivoPush(application)
-            AliyunThirdPushUtils.registerOppoPush(application)
-            AliyunThirdPushUtils.registerMeizuPush(application)
-            AliyunThirdPushUtils.registerGCM(application)
-            AliyunThirdPushUtils.registerHonorPush(application)
+            when{
+                PushManufacturerUtil.supportHuaweiPush() -> AliyunThirdPushUtils.registerHuaweiPush(appContext)
+                PushManufacturerUtil.supportHonorPush(appContext) -> AliyunThirdPushUtils.registerHonorPush(appContext)
+
+                PushManufacturerUtil.supportXIAOMIPush() -> AliyunThirdPushUtils.registerXiaoMiPush(appContext)
+                PushManufacturerUtil.supportVIVOPush(appContext) -> AliyunThirdPushUtils.registerVivoPush(appContext)
+                PushManufacturerUtil.supportOPPOPush(appContext) -> AliyunThirdPushUtils.registerOppoPush(appContext)
+                PushManufacturerUtil.supportMEIZUPush() -> AliyunThirdPushUtils.registerMeizuPush(appContext)
+                else -> {
+                    callback(Result.success(CommonResult(code = PushConstants.CODE_FAILED,"not support BRAND")))
+                    return
+                }
+            }
 
             callback(Result.success(CommonResult(code = PushConstants.CODE_SUCCESS)))
         } else {

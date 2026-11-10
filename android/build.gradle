@@ -70,5 +70,4 @@ dependencies {
     api "com.aliyun.ams:alicloud-android-third-push-xiaomi:4.0.0"
     api "com.aliyun.ams:alicloud-android-third-push-huawei:4.0.0"
     api "com.aliyun.ams:alicloud-android-third-push-honor:4.0.0"
-    api 'com.aliyun.ams:alicloud-android-third-push-fcm:4.0.0'
 }
