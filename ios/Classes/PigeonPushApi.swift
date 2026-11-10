@@ -17,365 +17,355 @@ class PigeonPushApi: PushApi {
 
     // MARK: - 标签方法
 
-    func bindTag(_ request: TagRequest) async throws -> CommonResult {
+    func bindTag(request: TagRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let tags = request.tags, !tags.isEmpty else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = PushConstants.msgTagsEmpty
-            return result
+            completion(.success(result))
+            return
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
-            // iOS SDK 2.1.0: 使用默认值 target=1 (设备标签), alias=nil
-            CloudPushSDK.bindTag(1, withTags: tags, withAlias: nil) { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+        // iOS SDK 2.1.0: 使用默认值 target=1 (设备标签), alias=nil
+        CloudPushSDK.bindTag(1, withTags: tags, withAlias: nil) { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func unbindTag(_ request: TagRequest) async throws -> CommonResult {
+    func unbindTag(request: TagRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let tags = request.tags, !tags.isEmpty else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = PushConstants.msgTagsEmpty
-            return result
+            completion(.success(result))
+            return
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
-            // iOS SDK 2.1.0: 使用默认值
-            CloudPushSDK.unbindTag(1, withTags: tags, withAlias: nil) { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+        // iOS SDK 2.1.0: 使用默认值
+        CloudPushSDK.unbindTag(1, withTags: tags, withAlias: nil) { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func listTags() async throws -> TagsResult {
-        return try await withCheckedThrowingContinuation { continuation in
-            // iOS SDK 2.1.0: 使用默认值 target=1
-            CloudPushSDK.listTags(1) { res in
-                let result = TagsResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                    result.tagsList = res.data as? String
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+    func listTags(completion: @escaping (Result<TagsResult, Error>) -> Void) {
+        // iOS SDK 2.1.0: 使用默认值 target=1
+        CloudPushSDK.listTags(1) { res in
+            var result = TagsResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+                result.tagsList = res.data as? String
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
     // MARK: - 账号/别名方法
 
-    func bindAccount(_ request: AccountRequest) async throws -> CommonResult {
+    func bindAccount(request: AccountRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let account = request.account, !account.isEmpty else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = PushConstants.msgAccountEmpty
-            return result
+            completion(.success(result))
+            return
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
-            CloudPushSDK.bindAccount(account) { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+        CloudPushSDK.bindAccount(account) { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func unbindAccount() async throws -> CommonResult {
-        return try await withCheckedThrowingContinuation { continuation in
-            CloudPushSDK.unbindAccount { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+    func unbindAccount(completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        CloudPushSDK.unbindAccount { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func addAlias(_ request: AliasRequest) async throws -> CommonResult {
+    func addAlias(request: AliasRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let alias = request.alias, !alias.isEmpty else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = PushConstants.msgAliasEmpty
-            return result
+            completion(.success(result))
+            return
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
-            CloudPushSDK.addAlias(alias) { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+        CloudPushSDK.addAlias(alias) { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func removeAlias(_ request: AliasRequest) async throws -> CommonResult {
+    func removeAlias(request: AliasRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let alias = request.alias, !alias.isEmpty else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = PushConstants.msgAliasEmpty
-            return result
+            completion(.success(result))
+            return
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
-            CloudPushSDK.removeAlias(alias) { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+        CloudPushSDK.removeAlias(alias) { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func listAlias() async throws -> AliasListResult {
-        return try await withCheckedThrowingContinuation { continuation in
-            CloudPushSDK.listAliases { res in
-                let result = AliasListResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                    result.aliasList = res.data as? String
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+    func listAlias(completion: @escaping (Result<AliasListResult, Error>) -> Void) {
+        CloudPushSDK.listAliases { res in
+            var result = AliasListResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+                result.aliasList = res.data as? String
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
     // MARK: - 设备ID
 
-    func getDeviceId() async throws -> DeviceIdResult {
-        let result = DeviceIdResult()
+    func getDeviceId(completion: @escaping (Result<DeviceIdResult, Error>) -> Void) {
+        var result = DeviceIdResult()
         result.deviceId = CloudPushSDK.getDeviceId()
-        return result
+        completion(.success(result))
     }
 
     // MARK: - iOS 独有方法
 
-    func initPushSdk(_ request: InitPushRequest) async throws -> CommonResult {
+    func initPushSdk(request: InitPushRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let appKey = request.appKey, !appKey.isEmpty else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = "appKey can not be empty"
-            return result
+            completion(.success(result))
+            return
         }
 
         guard let appSecret = request.appSecret, !appSecret.isEmpty else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = "appSecret can not be empty"
-            return result
+            completion(.success(result))
+            return
         }
 
         CloudPushSDK.turnOnDebug()
         plugin?.registerAPNS()
 
-        return try await withCheckedThrowingContinuation { continuation in
-            CloudPushSDK.asyncInit(appKey, appSecret: appSecret) { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+        CloudPushSDK.asyncInit(appKey, appSecret: appSecret) { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func turnOnDebug() async throws -> CommonResult {
+    func turnOnDebug(completion: @escaping (Result<CommonResult, Error>) -> Void) {
         CloudPushSDK.turnOnDebug()
-        let result = CommonResult()
+        var result = CommonResult()
         result.code = PushConstants.codeSuccess
-        return result
+        completion(.success(result))
     }
 
-    func showNoticeWhenForeground(_ request: ShowNotificationInForegroundRequest) async throws -> CommonResult {
+    func showNoticeWhenForeground(request: ShowNotificationInForegroundRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let enable = request.enable else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = "enable can not be null"
-            return result
+            completion(.success(result))
+            return
         }
 
         plugin?.setShowNoticeWhenForeground(enable)
 
-        let result = CommonResult()
+        var result = CommonResult()
         result.code = PushConstants.codeSuccess
-        return result
+        completion(.success(result))
     }
 
-    func setBadgeNum(_ request: BadgeNumberRequest) async throws -> CommonResult {
+    func setBadgeNum(request: BadgeNumberRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let badgeNum = request.badgeNum else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = "badgeNum can not be null"
-            return result
+            completion(.success(result))
+            return
         }
 
-        UIApplication.shared.applicationIconBadgeNumber = badgeNum
+        UIApplication.shared.applicationIconBadgeNumber = Int(badgeNum)
 
-        let result = CommonResult()
+        var result = CommonResult()
         result.code = PushConstants.codeSuccess
-        return result
+        completion(.success(result))
     }
 
-    func syncBadgeNum(_ request: BadgeNumberRequest) async throws -> CommonResult {
+    func syncBadgeNum(request: BadgeNumberRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
         guard let badgeNum = request.badgeNum else {
-            let result = CommonResult()
+            var result = CommonResult()
             result.code = PushConstants.codeParamIllegal
             result.errorMsg = "badgeNum can not be null"
-            return result
+            completion(.success(result))
+            return
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
-            CloudPushSDK.syncBadgeNum(badgeNum) { res in
-                let result = CommonResult()
-                if res.success {
-                    result.code = PushConstants.codeSuccess
-                } else {
-                    result.code = PushConstants.codeFailed
-                    result.errorMsg = res.error?.localizedDescription
-                }
-                continuation.resume(returning: result)
+        CloudPushSDK.syncBadgeNum(UInt(badgeNum)) { res in
+            var result = CommonResult()
+            if let res = res, res.success {
+                result.code = PushConstants.codeSuccess
+            } else {
+                result.code = PushConstants.codeFailed
+                result.errorMsg = res?.error?.localizedDescription
             }
+            completion(.success(result))
         }
     }
 
-    func getApnsDeviceToken() async throws -> ApnsDeviceTokenResult {
-        let result = ApnsDeviceTokenResult()
+    func getApnsDeviceToken(completion: @escaping (Result<ApnsDeviceTokenResult, Error>) -> Void) {
+        var result = ApnsDeviceTokenResult()
         result.deviceToken = CloudPushSDK.getApnsDeviceToken()
-        return result
+        completion(.success(result))
     }
 
-    func isChannelOpened() async throws -> ChannelOpenedResult {
-        let result = ChannelOpenedResult()
+    func isChannelOpened(completion: @escaping (Result<ChannelOpenedResult, Error>) -> Void) {
+        var result = ChannelOpenedResult()
         result.opened = CloudPushSDK.isChannelOpened()
-        return result
+        completion(.success(result))
     }
 
-    func setPluginLogEnabled(_ request: PluginLogRequest) {
+    func setPluginLogEnabled(request: PluginLogRequest) throws {
         guard let enabled = request.enabled else { return }
         plugin?.setLogEnabled(enabled)
     }
 
     // MARK: - Android 方法在 iOS 上返回错误
 
-    func initPush() async throws -> CommonResult {
-        let result = CommonResult()
+    func initPush(completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func initThirdPush() async throws -> CommonResult {
-        let result = CommonResult()
+    func initThirdPush(completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func closePushLog() async throws -> CommonResult {
-        let result = CommonResult()
+    func closePushLog(completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func setLogLevel(_ request: LogLevelRequest) async throws -> CommonResult {
-        let result = CommonResult()
+    func setLogLevel(request: LogLevelRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func bindPhoneNumber(_ request: PhoneNumberRequest) async throws -> CommonResult {
-        let result = CommonResult()
+    func bindPhoneNumber(request: PhoneNumberRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func unbindPhoneNumber() async throws -> CommonResult {
-        let result = CommonResult()
+    func unbindPhoneNumber(completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func setNotificationInGroup(_ request: NotificationGroupRequest) async throws -> CommonResult {
-        let result = CommonResult()
+    func setNotificationInGroup(request: NotificationGroupRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func clearNotifications() async throws -> CommonResult {
-        let result = CommonResult()
+    func clearNotifications(completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func createChannel(_ request: NotificationChannelRequest) async throws -> CommonResult {
-        let result = CommonResult()
+    func createChannel(request: NotificationChannelRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func createGroup(_ request: NotificationChannelGroupRequest) async throws -> CommonResult {
-        let result = CommonResult()
+    func createGroup(request: NotificationChannelGroupRequest, completion: @escaping (Result<CommonResult, Error>) -> Void) {
+        var result = CommonResult()
         result.code = PushConstants.codeOnlyAndroid
         result.errorMsg = PushConstants.msgOnlyAndroid
-        return result
+        completion(.success(result))
     }
 
-    func isNotificationEnabled(_ request: CheckNotificationRequest) async throws -> NotificationEnabledResult {
-        let result = NotificationEnabledResult()
+    func isNotificationEnabled(request: CheckNotificationRequest, completion: @escaping (Result<NotificationEnabledResult, Error>) -> Void) {
+        var result = NotificationEnabledResult()
         result.enabled = false
-        return result
+        completion(.success(result))
     }
 
-    func jumpToNotificationSettings(_ request: CheckNotificationRequest) {
+    func jumpToNotificationSettings(request: CheckNotificationRequest) throws {
         // iOS no-op
     }
 }

@@ -4,6 +4,7 @@ import CloudPushSDK
 import UserNotifications
 
 /// 阿里云推送 Flutter 插件 - Swift 实现
+@objc(AliyunPushPlugin)
 class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegate {
 
     // MARK: - Properties
@@ -51,27 +52,16 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
     // MARK: - APNs Registration
 
     func registerAPNS() {
-        let systemVersion = (UIDevice.current.systemVersion as NSString).floatValue
+        // 现代 iOS (iOS 10+) 使用 UserNotifications framework
+        notificationCenter = UNUserNotificationCenter.current()
+        notificationCenter?.delegate = self
 
-        if systemVersion >= 10.0 {
-            notificationCenter = UNUserNotificationCenter.current()
-            notificationCenter?.delegate = self
-
-            notificationCenter?.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-                if granted {
-                    DispatchQueue.main.async {
-                        UIApplication.shared.registerForRemoteNotifications()
-                    }
+        notificationCenter?.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if granted {
+                DispatchQueue.main.async {
+                    UIApplication.shared.registerForRemoteNotifications()
                 }
             }
-        } else if systemVersion >= 8.0 {
-            let types: UIUserNotificationType = [.alert, .badge, .sound]
-            let settings = UIUserNotificationSettings(types: types, categories: nil)
-            UIApplication.shared.registerUserNotificationSettings(settings)
-            UIApplication.shared.registerForRemoteNotifications()
-        } else {
-            let types: UIRemoteNotificationType = [.alert, .badge, .sound]
-            UIApplication.shared.registerForRemoteNotificationTypes(types)
         }
     }
 
@@ -79,11 +69,11 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
         self.deviceToken = deviceToken
 
         CloudPushSDK.registerDevice(deviceToken) { result in
-            if result.success {
+            if let result = result, result.success {
                 let apnsToken = CloudPushSDK.getApnsDeviceToken()
                 self.sendEvent("onRegisterDeviceTokenSuccess", ["apnsDeviceToken": apnsToken])
             } else {
-                self.sendEvent("onRegisterDeviceTokenFailed", ["error": result.error?.localizedDescription ?? "Unknown error"])
+                self.sendEvent("onRegisterDeviceTokenFailed", ["error": result?.error?.localizedDescription ?? "Unknown error"])
             }
         }
     }
@@ -158,7 +148,7 @@ class AliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegat
     }
 
     private func syncBadgeNum(_ num: Int) {
-        CloudPushSDK.syncBadgeNum(num) { _ in }
+        CloudPushSDK.syncBadgeNum(UInt(num)) { _ in }
     }
 
     private func sendEvent(_ method: String, _ arguments: [String: Any] = [:]) {
