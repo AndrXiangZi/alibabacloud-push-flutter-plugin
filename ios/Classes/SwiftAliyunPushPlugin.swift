@@ -25,17 +25,20 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
         instance.channel = channel
         instance.pigeonApi = PigeonPushApi(plugin: instance)
 
-        // 注册 Pigeon API
+        // 注册 Pigeon API (Flutter call Native)
         PushApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance.pigeonApi)
+
+        // 初始化事件通道
+        PushEventChannel.shared.setup(messenger: registrar.messenger())
 
         registrar.addApplicationDelegate(instance)
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
-    // MARK: - Method Call Handler (保留用于事件回调)
+    // MARK: - Method Call Handler
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        // Pigeon 已处理所有方法，这里只处理事件回调
+        // Pigeon 已处理所有方法
         result(FlutterMethodNotImplemented)
     }
 
@@ -69,16 +72,21 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
 
         CloudPushSDK.registerDevice(deviceToken) { result in
             if let result = result, result.success {
-                let apnsToken = CloudPushSDK.getApnsDeviceToken()
-                self.sendEvent("onRegisterDeviceTokenSuccess", ["apnsDeviceToken": apnsToken])
+                let apnsToken = CloudPushSDK.getApnsDeviceToken() ?? ""
+                // 改用 EventChannel
+                PushEventChannel.shared.onRegisterDeviceTokenSuccess(apnsDeviceToken: apnsToken)
             } else {
-                self.sendEvent("onRegisterDeviceTokenFailed", ["error": result?.error?.localizedDescription ?? "Unknown error"])
+                // 改用 EventChannel
+                PushEventChannel.shared.onRegisterDeviceTokenFailed(
+                    error: result?.error?.localizedDescription ?? "Unknown error"
+                )
             }
         }
     }
 
     public func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        sendEvent("onRegisterDeviceTokenFailed", ["error": error.localizedDescription])
+        // 改用 EventChannel
+        PushEventChannel.shared.onRegisterDeviceTokenFailed(error: error.localizedDescription)
     }
 
     // MARK: - Remote Notification Handling
@@ -86,7 +94,9 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
     public func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
 
         CloudPushSDK.sendNotificationAck(userInfo)
-        sendEvent("onNotification", userInfo as? [String: Any] ?? [:])
+
+        // 改用 EventChannel
+        PushEventChannel.shared.onNotification(userInfo: userInfo as? [String: Any] ?? [:])
 
         // 处理冷启动的通知点击
         if let remoteNotification = remoteNotification {
@@ -94,7 +104,9 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
                let remoteMsgId = remoteNotification["m"] as? String,
                msgId == remoteMsgId {
                 CloudPushSDK.sendNotificationAck(remoteNotification)
-                sendEvent("onNotificationOpened", remoteNotification as? [String: Any] ?? [:])
+
+                // 改用 EventChannel
+                PushEventChannel.shared.onNotificationOpened(userInfo: remoteNotification as? [String: Any] ?? [:])
                 self.remoteNotification = nil
             }
         }
@@ -122,11 +134,15 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
         if userAction == UNNotificationDefaultActionIdentifier {
             // 点击通知
             CloudPushSDK.sendNotificationAck(userInfo)
-            sendEvent("onNotificationOpened", userInfo as? [String: Any] ?? [:])
+
+            // 改用 EventChannel
+            PushEventChannel.shared.onNotificationOpened(userInfo: userInfo as? [String: Any] ?? [:])
         } else if userAction == UNNotificationDismissActionIdentifier {
             // 通知被删除
             CloudPushSDK.sendDeleteNotificationAck(userInfo)
-            sendEvent("onNotificationRemoved", userInfo as? [String: Any] ?? [:])
+
+            // 改用 EventChannel
+            PushEventChannel.shared.onNotificationRemoved(userInfo: userInfo as? [String: Any] ?? [:])
         }
 
         completionHandler()
@@ -143,15 +159,13 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
 
         // 上报通知到达
         CloudPushSDK.sendNotificationAck(userInfo)
-        sendEvent("onNotification", userInfo as? [String: Any] ?? [:])
+
+        // 改用 EventChannel
+        PushEventChannel.shared.onNotification(userInfo: userInfo as? [String: Any] ?? [:])
     }
 
     private func syncBadgeNum(_ num: Int) {
         CloudPushSDK.syncBadgeNum(UInt(num)) { _ in }
-    }
-
-    private func sendEvent(_ method: String, _ arguments: [String: Any] = [:]) {
-        channel?.invokeMethod(method, arguments: arguments)
     }
 
     func setShowNoticeWhenForeground(_ enable: Bool) {
@@ -174,7 +188,8 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
     }
 
     @objc private func onChannelOpened() {
-        sendEvent("onChannelOpened")
+        // 改用 EventChannel
+        PushEventChannel.shared.onChannelOpened()
     }
 
     // MARK: - Message Receiver
@@ -190,14 +205,19 @@ public class SwiftAliyunPushPlugin: NSObject, FlutterPlugin, UNUserNotificationC
 
     @objc private func onMessageReceived(_ notification: Notification) {
         if let message = notification.object as? CCPSysMessage {
-            sendEvent("onMessage", [
-                "title": message.title ?? "",
-                "body": message.body ?? ""
-            ])
+            // 改用 EventChannel
+            // message.title 和 message.body 可能是 Data 类型，需要转换
+            let title = (message.title as? Data).flatMap { String(data: $0, encoding: .utf8) } ?? message.title as? String
+            let body = (message.body as? Data).flatMap { String(data: $0, encoding: .utf8) } ?? message.body as? String
+            PushEventChannel.shared.onMessage(
+                title: title,
+                body: body
+            )
         }
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        PushEventChannel.shared.dispose()
     }
 }

@@ -37,22 +37,15 @@ class AliyunPushPlugin : FlutterPlugin {
         // 初始化推送服务
         PushServiceFactory.init(context!!)
 
-        // 创建并注册 Pigeon API
+        // 创建并注册 Pigeon API (Flutter call Native)
         pigeonApi = PigeonPushApi(context!!)
         PushApi.setUp(binding.binaryMessenger, pigeonApi)
 
-        // 初始化事件回调处理器
-        PushEventCallbackHandler.init(binding.binaryMessenger)
+        // 初始化事件通道 (Native call Flutter)
+        PushEventChannel.init(binding.binaryMessenger, context!!)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        // 清理事件回调处理器
-        PushEventCallbackHandler.dispose()
 
-        // 清理 Pigeon API
-        PushApi.setUp(binding.binaryMessenger, null)
-        pigeonApi = null
-        context = null
-        instance = null
     }
 }

@@ -72,8 +72,8 @@ public class AliyunPushMessageReceiver extends MessageReceiver {
 							   Map<String, String> extraMap) {
 		AliyunPushLog.d(REC_TAG, "onNotification: title=" + title + ", summary=" + summary);
 
-		// 使用 Pigeon 事件回调
-		PushEventCallbackHandler.INSTANCE.onNotification(title, summary, extraMap);
+		// 使用 EventChannel 事件回调
+		PushEventChannel.INSTANCE.onNotification(title, summary, extraMap);
 	}
 
 	/**
@@ -86,8 +86,8 @@ public class AliyunPushMessageReceiver extends MessageReceiver {
 	public void onMessage(Context context, CPushMessage cPushMessage) {
 		AliyunPushLog.d(REC_TAG, "onMessage: title=" + cPushMessage.getTitle());
 
-		// 使用 Pigeon 事件回调
-		PushEventCallbackHandler.INSTANCE.onMessage(
+		// 使用 EventChannel 事件回调
+		PushEventChannel.INSTANCE.onMessage(
 			cPushMessage.getTitle(),
 			cPushMessage.getContent(),
 			cPushMessage.getMessageId(),
@@ -112,8 +112,8 @@ public class AliyunPushMessageReceiver extends MessageReceiver {
 									 Map<String, String> extraMap) {
 		AliyunPushLog.d(REC_TAG, "onNotificationOpened: title=" + title + ", summary=" + summary);
 
-		// 使用 Pigeon 事件回调
-		PushEventCallbackHandler.INSTANCE.onNotificationOpened(title, summary, extraMap);
+		// 使用 EventChannel 事件回调
+		PushEventChannel.INSTANCE.onNotificationOpened(title, summary, extraMap);
 	}
 
 	/**
@@ -126,7 +126,7 @@ public class AliyunPushMessageReceiver extends MessageReceiver {
 	public void onNotificationRemoved(Context context, String messageId) {
 		AliyunPushLog.d(REC_TAG, "onNotificationRemoved: messageId=" + messageId);
 
-		// 使用 Pigeon 事件回调
-		PushEventCallbackHandler.INSTANCE.onNotificationRemoved(messageId);
+		// 使用 EventChannel 事件回调
+		PushEventChannel.INSTANCE.onNotificationRemoved(messageId);
 	}
 }

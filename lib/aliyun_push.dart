@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'pigeon/messages.dart';
 
 /// 成功码
@@ -41,6 +43,10 @@ class AliyunPush {
   factory AliyunPush() => _instance;
   
   static final AliyunPush _instance = AliyunPush._internal();
+  
+  // MethodChannel
+  static const MethodChannel _channel = 
+      MethodChannel('com.aliyun.ams.push/event');
   
   // ==================== 回调 ====================
   
@@ -87,8 +93,8 @@ class AliyunPush {
     _onIOSRegisterDeviceTokenSuccess = onIOSRegisterDeviceTokenSuccess;
     _onIOSRegisterDeviceTokenFailed = onIOSRegisterDeviceTokenFailed;
     
-    // 注册 Pigeon 回调
-    PushEventCallback.setUp(_PushEventCallbackHandler(this));
+    // 监听 MethodChannel
+    _channel.setMethodCallHandler(_handleMethodCall);
   }
   
   // ==================== 初始化 ====================
@@ -407,75 +413,56 @@ class AliyunPush {
     final result = await _api.isChannelOpened();
     return result.opened ?? false;
   }
-}
+  
+  // ==================== 私有方法 ====================
+  
+  /// 处理 MethodChannel 方法调用
+  Future<dynamic> _handleMethodCall(MethodCall call) async {
+    // 兼容 Android (可能为 String) 和 iOS (Map)
+    Map<dynamic, dynamic> arguments = _parseArguments(call.arguments);
+    
+    switch (call.method) {
+      case 'onNotification':
+        _onNotification?.call(arguments);
+        break;
+      case 'onMessage':
+        _onMessage?.call(arguments);
+        break;
+      case 'onNotificationOpened':
+        _onNotificationOpened?.call(arguments);
+        break;
+      case 'onNotificationRemoved':
+        _onNotificationRemoved?.call(arguments);
+        break;
+      case 'onChannelOpened':
+        _onIOSChannelOpened?.call({});
+        break;
+      case 'onRegisterDeviceTokenSuccess':
+        _onIOSRegisterDeviceTokenSuccess?.call(arguments);
+        break;
+      case 'onRegisterDeviceTokenFailed':
+        _onIOSRegisterDeviceTokenFailed?.call(arguments);
+        break;
+    }
+  }
+  
+  /// 解析参数，兼容 Android (String) 和 iOS (Map)
+  Map<dynamic, dynamic> _parseArguments(dynamic arguments) {
+    final pushData = arguments['pushData'];
+    if (pushData == null) return arguments;
+    if (pushData is String) {
+      arguments['pushData'] = jsonDecode(pushData);
+      return arguments;
+    } else if (pushData is Map) {
+      arguments['pushData'] = convertMap(pushData);
+      return arguments;
+    } else {
+      return {};
+    }
+  }
 
-/// Pigeon 事件回调处理器
-class _PushEventCallbackHandler extends PushEventCallback {
-  final AliyunPush _push;
-  
-  _PushEventCallbackHandler(this._push);
-  
-  @override
-  void onNotification(NotificationData notification) async {
-    await _push._onNotification?.call(_notificationToMap(notification));
-  }
-  
-  @override
-  void onMessage(MessageData message) async {
-    await _push._onMessage?.call(_messageToMap(message));
-  }
-  
-  @override
-  void onNotificationOpened(NotificationData notification) async {
-    await _push._onNotificationOpened?.call(_notificationToMap(notification));
-  }
-  
-  @override
-  void onNotificationRemoved(NotificationData notification) async {
-    await _push._onNotificationRemoved?.call(_notificationToMap(notification));
-  }
-  
-  @override
-  void onChannelOpened() async {
-    await _push._onIOSChannelOpened?.call({});
-  }
-  
-  @override
-  void onRegisterDeviceTokenSuccess(DeviceTokenData result) async {
-    await _push._onIOSRegisterDeviceTokenSuccess?.call(_deviceTokenToMap(result));
-  }
-  
-  @override
-  void onRegisterDeviceTokenFailed(DeviceTokenData result) async {
-    await _push._onIOSRegisterDeviceTokenFailed?.call(_deviceTokenToMap(result));
-  }
-  
-  // 辅助方法：将 NotificationData 转换为 Map
-  Map<dynamic, dynamic> _notificationToMap(NotificationData data) {
-    final map = <String, dynamic>{};
-    if (data.title != null) map['title'] = data.title;
-    if (data.summary != null) map['summary'] = data.summary;
-    if (data.messageId != null) map['messageId'] = data.messageId;
-    if (data.extras != null) map.addAll(data.extras!);
-    return map;
-  }
-  
-  // 辅助方法：将 MessageData 转换为 Map
-  Map<dynamic, dynamic> _messageToMap(MessageData data) {
-    final map = <String, dynamic>{};
-    if (data.title != null) map['title'] = data.title;
-    if (data.content != null) map['content'] = data.content;
-    if (data.messageId != null) map['messageId'] = data.messageId;
-    if (data.appId != null) map['appId'] = data.appId;
-    if (data.traceInfo != null) map['traceInfo'] = data.traceInfo;
-    return map;
-  }
-  
-  // 辅助方法：将 DeviceTokenData 转换为 Map
-  Map<dynamic, dynamic> _deviceTokenToMap(DeviceTokenData data) {
-    final map = <String, dynamic>{};
-    if (data.apnsDeviceToken != null) map['apnsDeviceToken'] = data.apnsDeviceToken;
-    if (data.error != null) map['error'] = data.error;
-    return map;
+  Map<String, dynamic> convertMap(Map<dynamic, dynamic> input) {
+    return Map<String, dynamic>.from(
+        input.map((key, value) => MapEntry(key?.toString() ?? '', value)));
   }
 }
