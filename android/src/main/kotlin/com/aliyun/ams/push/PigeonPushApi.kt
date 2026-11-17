@@ -241,30 +241,69 @@ class PigeonPushApi(private val context: Context) : PushApi {
     }
 
     override fun initThirdPush(callback: (Result<CommonResult>) -> Unit) {
-        val appContext = context.applicationContext
-
-        if (appContext is android.app.Application) {
-            when{
-                PushManufacturerUtil.supportHuaweiPush() -> AliyunThirdPushUtils.registerHuaweiPush(appContext)
-                PushManufacturerUtil.supportHonorPush(appContext) -> AliyunThirdPushUtils.registerHonorPush(appContext)
-
-                PushManufacturerUtil.supportXIAOMIPush() -> AliyunThirdPushUtils.registerXiaoMiPush(appContext)
-                PushManufacturerUtil.supportVIVOPush(appContext) -> AliyunThirdPushUtils.registerVivoPush(appContext)
-                PushManufacturerUtil.supportOPPOPush(appContext) -> AliyunThirdPushUtils.registerOppoPush(appContext)
-                PushManufacturerUtil.supportMEIZUPush() -> AliyunThirdPushUtils.registerMeizuPush(appContext)
-                else -> {
-                    callback(Result.success(CommonResult(code = PushConstants.CODE_FAILED,"not support BRAND")))
-                    return
-                }
-            }
-
-            callback(Result.success(CommonResult(code = PushConstants.CODE_SUCCESS)))
-        } else {
-            callback(Result.success(CommonResult(
-                code = PushConstants.CODE_FAILED,
-                errorMsg = "Context is not Application"
-            )))
+        val appContext = context.applicationContext as? android.app.Application
+        if (appContext == null) {
+            callback(
+                Result.success(
+                    CommonResult(
+                        PushConstants.CODE_FAILED,
+                        errorMsg = "Context is not Application"
+                    )
+                )
+            )
+            return
         }
+
+        val supported = try {
+            when {
+                PushManufacturerUtil.supportHonorPush(appContext) -> {
+                    AliyunThirdPushUtils.registerHonorPush(appContext); true
+                }
+
+                PushManufacturerUtil.supportHuaweiPush() -> {
+                    AliyunThirdPushUtils.registerHuaweiPush(appContext); true
+                }
+
+                PushManufacturerUtil.supportXIAOMIPush() -> {
+                    AliyunThirdPushUtils.registerXiaoMiPush(appContext); true
+                }
+
+                PushManufacturerUtil.supportVIVOPush(appContext) -> {
+                    AliyunThirdPushUtils.registerVivoPush(appContext); true
+                }
+
+                PushManufacturerUtil.supportOPPOPush(appContext) -> {
+                    AliyunThirdPushUtils.registerOppoPush(appContext); true
+                }
+
+                PushManufacturerUtil.supportMEIZUPush() -> {
+                    AliyunThirdPushUtils.registerMeizuPush(appContext); true
+                }
+
+                else -> false
+            }
+        } catch (t: Throwable) {
+            // 回调放在 catch 外，避免 callback 自身异常导致二次回调
+            callback(
+                Result.success(
+                    CommonResult(
+                        PushConstants.CODE_FAILED,
+                        errorMsg = "register failed: ${t.message}"
+                    )
+                )
+            )
+            return
+        }
+
+        callback(
+            if (supported) Result.success(CommonResult(PushConstants.CODE_SUCCESS))
+            else Result.success(
+                CommonResult(
+                    PushConstants.CODE_FAILED,
+                    errorMsg = "not support BRAND: ${Build.MANUFACTURER}"
+                )
+            )
+        )
     }
 
     // ==================== 日志管理 ====================
